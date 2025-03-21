@@ -39,10 +39,18 @@ public class AberrationAngle : MonoBehaviour
         for (int i = 0; i < originalVertices.Length; i++)
         {
             modifiedVertices[i] = originalVertices[i];
-            baseVertices[i].x = originalVertices[i].x*transform.localScale.x;
-            baseVertices[i].y = originalVertices[i].y*transform.localScale.y;
-            baseVertices[i].z = originalVertices[i].z*transform.localScale.z;
+
+            // Apply local scale and rotation to base vertices
+            Vector3 scaledVertex = new Vector3(
+                originalVertices[i].x * transform.localScale.x,
+                originalVertices[i].y * transform.localScale.y,
+                originalVertices[i].z * transform.localScale.z
+            );
+            Debug.Log($"Before: {scaledVertex}"); // Debug output for local rotation
+            baseVertices[i] = transform.rotation * scaledVertex; // Apply rotation
+            Debug.Log ($"After: {baseVertices[i]}");
         }
+
         // beta1 = relativeSpeed;
         objectBeta = GameObject.FindGameObjectWithTag("BetaText");
         beta1 = objectBeta.GetComponent<BetaText>().beta;
@@ -54,7 +62,7 @@ public class AberrationAngle : MonoBehaviour
 
         objectBeta = GameObject.FindGameObjectWithTag("BetaText");
         beta1 = objectBeta.GetComponent<BetaText>().beta;
-        Debug.Log($"Beta1: {beta1}");
+        // Debug.Log($"Beta1: {beta1}");
 
         x_0 = transform.position.x;
         y_0 = transform.position.y;
@@ -107,9 +115,18 @@ public class AberrationAngle : MonoBehaviour
             // modifiedVertices[i].y = originalVertices[i].y;
             // modifiedVertices[i].z = (dist*saRel - z_0)/transform.localScale.z;
            
-            modifiedVertices[i].x = (caRel * dist - x_0)/transform.localScale.x;
-            modifiedVertices[i].y = originalVertices[i].y;
-            modifiedVertices[i].z = (dist*saRel - z_0)/transform.localScale.z;
+            // Convert back from rotated space to local space
+            Vector3 rotatedVertex = new Vector3(
+                caRel * dist - x_0,
+                baseVertices[i].y,
+                dist * saRel - z_0
+                // baseVertices[i].x, baseVertices[i].y, baseVertices[i].z
+            );
+            Vector3 localVertex = Quaternion.Inverse(transform.rotation) * rotatedVertex; // Reverse rotation
+
+            modifiedVertices[i].x = localVertex.x / transform.localScale.x;
+            modifiedVertices[i].y = localVertex.y / transform.localScale.y;
+            modifiedVertices[i].z = localVertex.z / transform.localScale.z;
            
             // Debug.Log($"distance {i}: {dist}");
             // if (isdebug == true & i == 1 & dist*saRel > -1 & dist*saRel < 1) Debug.Log($"Vertex {i}: {dist*saRel}");

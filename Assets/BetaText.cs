@@ -5,7 +5,7 @@ public class BetaText : MonoBehaviour
 {
     // Written by Uzi: handles beta display on HUD
     [SerializeField] private Text _title; // make the text legally exist
-    public float beta; // this will have its own beta for simplicity's sake
+    public float beta = 0.5f; // this will have its own beta for simplicity's sake
     private float verticalInput; // quantify up
     private float inputScale = 0.05f;
 
