@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 public class AberrationAngle : MonoBehaviour
@@ -86,42 +87,23 @@ public class AberrationAngle : MonoBehaviour
             float z = z_0 + baseVertices[i].z;
 
             float dist = Mathf.Sqrt(x*x +y*y + z*z);
+            float dzy = Mathf.Sqrt(y*y + z*z);
 
             // if (isdebug == true & i==1) Debug.Log($"Vertex {i} distance: {dist}");
 
-            float ca = x / Mathf.Sqrt(x*x + z*z);
-            // float ca = x / dist;
+            float cosTheta = (-1)*x/dist;
+            float cosThetaModified = (cosTheta + relativeSpeed )/ (1 + relativeSpeed * cosTheta);
+            float sinThetaModified = Mathf.Sqrt(1 - cosThetaModified * cosThetaModified);
 
-            float caRel = (ca + relativeSpeed) / (1 + relativeSpeed * ca);
-            float saRel = Mathf.Sqrt(1 - caRel * caRel);
-           
-            // if (i == 1) Debug.Log($"baseVertices {i}: {baseVertices[i]}");
-            // if (i == 1) Debug.Log($"distance {i}: {dist}");
-            
-            if (z < 0 ) saRel = -1*saRel;
+            float sinPhi = y/dzy;
+            float cosPhi = z/dzy;
 
-            // if (i == 1) Debug.Log($"x {i}: {dist*saRel}");
-            // if (i == 1) Debug.Log($"distance {i}: {dist}");
-            // if (i == 1) Debug.Log($"sin {i}: {saRel}");
-            // if (i == 1 & isdebug == true) Debug.Log($"sin {i}: {saRel}");
-
-            if (caRel == 0) caRel = 0.00001f;
-            if (saRel == 0) saRel = 0.00001f;
-
-            // if (z < 0) saRel = -1*saRel;
-
-            //PLEASE keep this commented out code below because this fixed the bug for some reason
-            // modifiedVertices[i].x = (caRel * dist - x_0)/transform.localScale.x;
-            // modifiedVertices[i].y = originalVertices[i].y;
-            // modifiedVertices[i].z = (dist*saRel - z_0)/transform.localScale.z;
-           
-            // Convert back from rotated space to local space
             Vector3 rotatedVertex = new Vector3(
-                caRel * dist - x_0,
-                baseVertices[i].y,
-                dist * saRel - z_0
-                // baseVertices[i].x, baseVertices[i].y, baseVertices[i].z
+                -1*dist*cosThetaModified - x_0,
+                dist*sinThetaModified*sinPhi - y_0,
+                dist*sinThetaModified*cosPhi - z_0
             );
+
             Vector3 localVertex = Quaternion.Inverse(transform.rotation) * rotatedVertex; // Reverse rotation
 
             modifiedVertices[i].x = localVertex.x / transform.localScale.x;
