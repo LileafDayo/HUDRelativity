@@ -3,56 +3,63 @@ using UnityEngine;
 
 public class AberrationAngle : MonoBehaviour
 {
-    private Mesh mesh;
-    private Vector3[] originalVertices;
-    private Vector3[] modifiedVertices;
-    private Vector3[] baseVertices;
-    public float relativeSpeed = 0.5f;
-    private float beta1;
-    private GameObject objectBeta;
-    public float speed = 5f;
-    public bool isdebug = false;
+    private Mesh mesh; // The mesh of the object this script is attached to
+    private Vector3[] originalVertices; // Stores the original vertices of the mesh
+    private Vector3[] modifiedVertices; // Stores the modified vertices after calculations
+    private Vector3[] baseVertices; // Stores the vertices after applying scale and rotation
+    public float relativeSpeed = 0.5f; // Speed relative to light
+    private float beta1; // A variable to store the relative speed from beta controller
+    private GameObject objectBeta; // Reference to the GameObject with the relative
+    public float speed = 5f; // Speed multiplier for movement
+    public bool isdebug = false; // Debug flag to enable/disable debug logs
 
-    private float x_0;
-    private float y_0;
-    private float z_0;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private float x_0; // Initial x position of the object
+    private float y_0; // Initial y position of the object
+    private float z_0; // Initial z position of the object
+
+    // Start is called before the first frame update
     void Start()
     {
-        // Get the Mesh component
+        // Try to get the MeshFilter component attached to this GameObject
         MeshFilter meshFilter = GetComponent<MeshFilter>();
         if (meshFilter != null)
         {
-            mesh = meshFilter.mesh; // Use mesh instead of sharedMesh to avoid modifying all instances
+            // Assign the mesh from the MeshFilter
+            mesh = meshFilter.mesh; // Use mesh instead of sharedMesh to avoid affecting all instances of this mesh
         }
         else
         {
+            // Log an error if no MeshFilter is found
             Debug.LogError("No MeshFilter found on this GameObject!");
             return;
         }
 
-        // Store original vertices
+        // Store the original vertices of the mesh
         originalVertices = mesh.vertices;
+        // Initialize arrays for modified and base vertices
         modifiedVertices = new Vector3[originalVertices.Length];
         baseVertices = new Vector3[originalVertices.Length];
 
-        // Copy vertices for modification
+        // Copy and process each vertex
         for (int i = 0; i < originalVertices.Length; i++)
         {
+            // Copy the original vertex to the modified array
             modifiedVertices[i] = originalVertices[i];
 
-            // Apply local scale and rotation to base vertices
+            // Apply the object's local scale to the vertex
             Vector3 scaledVertex = new Vector3(
                 originalVertices[i].x * transform.localScale.x,
                 originalVertices[i].y * transform.localScale.y,
                 originalVertices[i].z * transform.localScale.z
             );
-            Debug.Log($"Before: {scaledVertex}"); // Debug output for local rotation
-            baseVertices[i] = transform.rotation * scaledVertex; // Apply rotation
-            Debug.Log ($"After: {baseVertices[i]}");
+            Debug.Log($"Before: {scaledVertex}"); // Debug log to show the vertex before rotation
+
+            // Apply the object's rotation to the scaled vertex
+            baseVertices[i] = transform.rotation * scaledVertex;
+            Debug.Log($"After: {baseVertices[i]}"); // Debug log to show the vertex after rotation
         }
 
-        // beta1 = relativeSpeed;
+        // Find the GameObject tagged as "BetaText" and get its beta value
         objectBeta = GameObject.FindGameObjectWithTag("BetaText");
         beta1 = objectBeta.GetComponent<BetaText>().beta;
     }
@@ -60,63 +67,69 @@ public class AberrationAngle : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        // Update the reference to the "BetaText" GameObject and its beta value
         objectBeta = GameObject.FindGameObjectWithTag("BetaText");
         beta1 = objectBeta.GetComponent<BetaText>().beta;
-        // Debug.Log($"Beta1: {beta1}");
 
+        // Store the current position of the object
         x_0 = transform.position.x;
         y_0 = transform.position.y;
         z_0 = transform.position.z;
 
+        // If the mesh is null, exit the function
         if (mesh == null) return;
 
+        // Update the relative speed with the beta value
         relativeSpeed = beta1;
 
-        float time = Time.time;
-        float dx = relativeSpeed * time * speed;
-        
+        // Calculate the new x position based on time and speed
+        float time = Time.time; // Time since the start of the game
+        float dx = relativeSpeed * time * speed; // Change in x position
+        float newX = x_0 + dx; // New x position
+        transform.position = new Vector3(newX, transform.position.y, transform.position.z); // Update the object's position
 
-        float newX = x_0 + dx;
-        transform.position = new Vector3(newX, transform.position.y, transform.position.z);
-
+        // Update each vertex of the mesh
         for (int i = 0; i < modifiedVertices.Length; i++)
         {
+            // Calculate the global position of the vertex
             float x = newX + baseVertices[i].x;
             float y = y_0 + baseVertices[i].y;
             float z = z_0 + baseVertices[i].z;
 
-            float dist = Mathf.Sqrt(x*x +y*y + z*z);
-            float dzy = Mathf.Sqrt(y*y + z*z);
+            // Perform calculations for vertex transformation
+            float dist = Mathf.Sqrt(x * x + y * y + z * z); // Distance from the origin
+            float dzy = Mathf.Sqrt(y * y + z * z); // Distance in the yz plane
 
-            // if (isdebug == true & i==1) Debug.Log($"Vertex {i} distance: {dist}");
-
-            float cosTheta = (-1)*x/dist;
-            float cosThetaModified = (cosTheta + relativeSpeed )/ (1 + relativeSpeed * cosTheta);
+            // Perform transformations based on equations of aberration
+            float cosTheta = (-1) * x / dist;
+            float cosThetaModified = (cosTheta + relativeSpeed) / (1 + relativeSpeed * cosTheta);
             float sinThetaModified = Mathf.Sqrt(1 - cosThetaModified * cosThetaModified);
 
-            float sinPhi = y/dzy;
-            float cosPhi = z/dzy;
+            // sin and cos of phi(azmuthal angle)
+            float sinPhi = y / dzy;
+            float cosPhi = z / dzy;
 
+            // Calculate the rotated vertex position
             Vector3 rotatedVertex = new Vector3(
-                -1*dist*cosThetaModified - x_0,
-                dist*sinThetaModified*sinPhi - y_0,
-                dist*sinThetaModified*cosPhi - z_0
+                -1 * dist * cosThetaModified - x_0,
+                dist * sinThetaModified * sinPhi - y_0,
+                dist * sinThetaModified * cosPhi - z_0
             );
 
-            Vector3 localVertex = Quaternion.Inverse(transform.rotation) * rotatedVertex; // Reverse rotation
+            // Reverse the object's rotation to get the local vertex position
+            Vector3 localVertex = Quaternion.Inverse(transform.rotation) * rotatedVertex;
 
+            // Scale the vertex back to its original size
             modifiedVertices[i].x = localVertex.x / transform.localScale.x;
             modifiedVertices[i].y = localVertex.y / transform.localScale.y;
             modifiedVertices[i].z = localVertex.z / transform.localScale.z;
-           
-            // Debug.Log($"distance {i}: {dist}");
-            // if (isdebug == true & i == 1 & dist*saRel > -1 & dist*saRel < 1) Debug.Log($"Vertex {i}: {dist*saRel}");
         }
 
+        // Apply the modified vertices back to the mesh
         mesh.vertices = modifiedVertices;
 
-        mesh.RecalculateNormals(); // Important to keep shading correct
-        mesh.RecalculateBounds();  // Update the bounding box
+        // Recalculate normals and bounds to ensure proper rendering
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
     }
 }
