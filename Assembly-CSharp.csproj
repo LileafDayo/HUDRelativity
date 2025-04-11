@@ -65,18 +65,22 @@
     <Analyzer Include="/Applications/Unity/Hub/Editor/6000.0.34f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets/Scripts/camtext.cs" />
     <Compile Include="Assets/Scripts/WhatIsThisMesh.cs" />
     <Compile Include="Assets/Scripts/HowDoIDoThis.cs" />
-    <Compile Include="Assets/BetaText.cs" />
+    <Compile Include="Assets/Scripts/DopplerEffectFeature.cs" />
+    <Compile Include="Assets/Scripts/DopplerEffectVolume.cs" />
     <Compile Include="Assets/Scripts/Loop.cs" />
     <Compile Include="Assets/Scripts/chasecam.cs" />
     <Compile Include="Assets/Scripts/lorentzslider.cs" />
-    <Compile Include="Assets/camtext.cs" />
+    <Compile Include="Assets/Scripts/DopplerEffectRenderer.cs" />
     <Compile Include="Assets/Scripts/AberrationAngle.cs" />
-    <Compile Include="Assets/Scripts/MoveBox.cs" />
+    <Compile Include="Assets/Scripts/BetaController.cs" />
+    <Compile Include="Assets/Scripts/BetaText.cs" />
+    <Compile Include="Assets/Scripts/MoveObject.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets/colourShiftShader.shader" />
+    <None Include="Assets/Objects/colourShiftShader.shader" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

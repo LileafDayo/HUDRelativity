@@ -10,9 +10,6 @@ public class AberrationAngle : MonoBehaviour
     public float relativeSpeed = 0.5f; // Speed relative to light
     private float beta1; // A variable to store the relative speed from beta controller
     private GameObject objectBeta; // Reference to the GameObject with the relative
-    public float speed = 5f; // Speed multiplier for movement
-    public bool isdebug = false; // Debug flag to enable/disable debug logs
-
     private float x_0; // Initial x position of the object
     private float y_0; // Initial y position of the object
     private float z_0; // Initial z position of the object
@@ -52,11 +49,11 @@ public class AberrationAngle : MonoBehaviour
                 originalVertices[i].y * transform.localScale.y,
                 originalVertices[i].z * transform.localScale.z
             );
-            Debug.Log($"Before: {scaledVertex}"); // Debug log to show the vertex before rotation
+            // Debug.Log($"Before: {scaledVertex}"); // Debug log to show the vertex before rotation
 
             // Apply the object's rotation to the scaled vertex
             baseVertices[i] = transform.rotation * scaledVertex;
-            Debug.Log($"After: {baseVertices[i]}"); // Debug log to show the vertex after rotation
+            // Debug.Log($"After: {baseVertices[i]}"); // Debug log to show the vertex after rotation
         }
 
         // Find the GameObject tagged as "BetaText" and get its beta value
@@ -82,17 +79,11 @@ public class AberrationAngle : MonoBehaviour
         // Update the relative speed with the beta value
         relativeSpeed = beta1;
 
-        // Calculate the new x position based on time and speed
-        float time = Time.time; // Time since the start of the game
-        float dx = relativeSpeed * time * speed; // Change in x position
-        float newX = x_0 + dx; // New x position
-        transform.position = new Vector3(newX, transform.position.y, transform.position.z); // Update the object's position
-
         // Update each vertex of the mesh
         for (int i = 0; i < modifiedVertices.Length; i++)
         {
             // Calculate the global position of the vertex
-            float x = newX + baseVertices[i].x;
+            float x = x_0 + baseVertices[i].x;
             float y = y_0 + baseVertices[i].y;
             float z = z_0 + baseVertices[i].z;
 

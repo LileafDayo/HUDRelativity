@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - BetaText
+  - Endline
   layers:
   - Default
   - TransparentFX
