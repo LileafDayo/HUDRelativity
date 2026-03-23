@@ -9,6 +9,13 @@ This project focuses on:
 
 > Note: The repository’s main content lives in `Assets/`. Most scene objects are Blender models, while the simulation logic is primarily in `Assets/Scripts/`.
 
+## My contributions
+
+I contributed by:
+- creating the relativity simulation script(s),
+- building the `Assets/Scenes/LondonStreet.unity` scene (including the looping behavior),
+- calibrating/tuning the project as a whole (visuals, controls, and effect parameters).
+
 ## Scene / entry point
 
 The most comprehensive scene is:
@@ -69,7 +76,7 @@ All scripts are in: `Assets/Scripts/`
 
 - **`BetaController.cs`** (class name `Controller`)
   - Reads `BetaText.beta` and pushes it into the URP volume stack (`DopplerEffectVolume`).
-  - Also computes intensity as `Clamp01(|beta| * 2)`.  
+  - Also computes intensity as `Clamp01(|beta| * 2)`.
 
 > Implementation note: both `BetaText` and `BetaController` attempt to drive the volume beta; you may want to keep only one “source of truth”.
 
@@ -93,4 +100,59 @@ This project defines a custom URP Volume + renderer feature(s):
   - Effect is active when `intensity > 0`
 
 - **`DopplerEffectFeature.cs`**
-  - A `ScriptableRendererFeature` that blits using shader `
+  - A `ScriptableRendererFeature` that blits using shader `"Hidden/RelativisticDoppler"`.
+  - Pass event: `BeforeRenderingPostProcessing`
+  - Reads beta + intensity from `DopplerEffectVolume`.
+
+- **`DopplerEffectRenderer.cs`**
+  - Another `ScriptableRendererFeature` using shader `"Custom/DopplerPostProcess"`.
+
+> You likely only need **one** renderer feature wired into your URP Renderer asset. If both exist, decide which shader/implementation you want and remove/disable the other.
+
+### Motion / scene helpers
+
+- **`MoveObject.cs`** (class name `MoveBox`)
+  - Moves an object along X based on beta and time.
+  - Uses a GameObject tagged **`Endline`** as a boundary/reference.
+
+- **`chasecam.cs`**
+  - Camera rotation via mouse axes.
+
+- **`camtext.cs`**
+  - Updates a HUD text element with “Camera sensitivity” (currently a standalone value; not yet hooked into `chasecam`).
+
+- **`lorentzslider.cs`**
+  - A UI slider-driven beta target with smoothing.
+  - Computes gamma (Lorentz factor) (current formula is `gamma = 1/sqrt(1-beta)`; verify intended math if you’re using this for physics/education).
+
+### Debug / scratch scripts
+
+- **`WhatIsThisMesh.cs`**: Logs mesh vertices + object scale (debugging).
+- **`HowDoIDoThis.cs`**: Experimental transform logic / prototype.
+- **`Loop.cs`**: Incomplete placeholder (won’t compile as-is due to `private` without a type).
+
+## Setup notes (important tags / scene wiring)
+
+Several scripts rely on **Unity Tags** and scene objects being present:
+
+- Tag: **`BetaText`**
+  - Must exist on the GameObject that has `BetaText.cs`.
+
+- Tag: **`Endline`**
+  - Used by `MoveBox` (`MoveObject.cs`) to determine a boundary/end position.
+
+URP / Volume requirements:
+- You need a **Volume** in the scene (Global or local) with **`Relativistic Doppler`** (`DopplerEffectVolume`) added.
+- The URP Renderer must include the selected **Renderer Feature** (`DopplerEffectFeature` *or* `DopplerEffectRenderer`).
+
+## Credits
+
+This was a 3rd-year university group project. Group members are kept anonymous, but their help and contributions were essential to the result.
+
+## Known issues / TODO
+
+- The repo currently includes Unity-generated folders/files (for example `Library/`, `Temp/`, `.DS_Store`). Consider ignoring these for cleaner version control.
+- `Loop.cs` is incomplete and may break compilation.
+- `BetaController` class is named `Controller` (file/class mismatch can be confusing).
+- Multiple systems appear to set `DopplerEffectVolume.beta`. Pick one to avoid fighting updates.
+- Some scripts use `GameObject.FindGameObjectWithTag()` every frame, which can be expensive; consider caching references.
